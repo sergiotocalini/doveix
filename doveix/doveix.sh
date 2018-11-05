@@ -111,13 +111,13 @@ account() {
     [[ -z ${DOVEIX_URI} || -z ${DOVEIX_USER} || -z ${DOVEIX_PASS} ]] && return 1
     
     if [[ ${operation} =~ (login|LOGIN|connect|CONNECT|conn|CONN) ]]; then
-	curl -s --insecure --url "${DOVEIX_URI}" --user "${DOVEIX_USER}:${DOVEIX_PASS}" 2>/dev/null
+	curl -s -o /dev/null --insecure --url "${DOVEIX_URI}" --user "${DOVEIX_USER}:${DOVEIX_PASS}" 2>/dev/null
 	rcode="${?}"
 	rval="${rcode}"
     elif [[ ${operation} =~ (examine|EXAMINE) ]]; then
 	res=`curl -s --insecure --url "${DOVEIX_URI}" --user "${DOVEIX_USER}:${DOVEIX_PASS}" --request "EXAMINE ${params[0]:-INBOX}" 2>/dev/null`
 	rcode="${?}"
-	rval=`echo "${a}" | grep -E "^*.*EXISTS" | grep -oE '[0-9]+'`
+	rval=`echo "${res}" | grep -E "^*.*EXISTS" | grep -oE '[0-9]+'`
     fi
     echo "${rval:-0}"
     return "${rcode:-0}"
