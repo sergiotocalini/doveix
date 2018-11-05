@@ -67,33 +67,37 @@ service() {
 
     pattern='^(([a-z]{3,5})://)?((([^:\/]+)(:([^@\/]*))?@)?([^:\/?]+)(:([0-9]+))?)(\/[^?]*)?(\?[^#]*)?(#.*)?$'
     [[ "${DOVEIX_URI}" =~ $pattern ]] || return 1
+
+    BASH_REMATCH=( ${.sh.match[@]} )
     
-    pid=`sudo lsof -Pi :${BASH_REMATCH[10]:-${BASH_REMATCH[2]}} -sTCP:LISTEN -t 2>/dev/null`
-    rcode="${?}"
-    if [[ -n ${pid} ]]; then
-	if [[ ${params[0]} == 'uptime' ]]; then
-	    res=`sudo ps -p ${pid} -o etimes -h`
-	elif [[ ${params[0]} == 'listen' ]]; then
-	    [[ ${rcode} == 0 && -n ${pid} ]] && res=1
-	elif [[ ${params[0]} == 'cert' ]]; then
-	    cert_text=`openssl s_client -connect "${BASH_REMATCH[3]}:${BASH_REMATCH[10]:-${BASH_REMATCH[2]}}" </dev/null 2>/dev/null`
-	    if [[ ${params[1]} == 'expires' ]]; then
-		date=`echo "${cert_text}" | openssl x509 -noout -enddate 2>/dev/null | cut -d'=' -f2`
-		res=$((($(date -d "${date}" +'%s') - $(date +'%s'))/86400))
-	    elif [[ ${params[1]} == 'after' ]]; then
-		date=`echo "${cert_text}" | openssl x509 -noout -enddate 2>/dev/null | cut -d'=' -f2`
+    if [[ ${params[0]} =~ (uptime|listen|cert) ]]; then
+	pid=`sudo lsof -Pi :${BASH_REMATCH[10]:-${BASH_REMATCH[2]}} -sTCP:LISTEN -t 2>/dev/null`
+	rcode="${?}"
+	if [[ -n ${pid} ]]; then
+	    if [[ ${params[0]} == 'uptime' ]]; then
+		res=`sudo ps -p ${pid} -o etimes -h`
+	    elif [[ ${params[0]} == 'listen' ]]; then
+		[[ ${rcode} == 0 && -n ${pid} ]] && res=1
+	    elif [[ ${params[0]} == 'cert' ]]; then
+		cert_text=`openssl s_client -connect "${BASH_REMATCH[3]}:${BASH_REMATCH[10]:-${BASH_REMATCH[2]}}" </dev/null 2>/dev/null`
+		if [[ ${params[1]} == 'expires' ]]; then
+		    date=`echo "${cert_text}" | openssl x509 -noout -enddate 2>/dev/null | cut -d'=' -f2`
+		    res=$((($(date -d "${date}" +'%s') - $(date +'%s'))/86400))
+		elif [[ ${params[1]} == 'after' ]]; then
+		    date=`echo "${cert_text}" | openssl x509 -noout -enddate 2>/dev/null | cut -d'=' -f2`
 		res=`date -d "${date}" +'%s'`
-	    elif [[ ${params[1]} == 'before' ]]; then
-		date=`echo "${cert_text}" | openssl x509 -noout -startdate 2>/dev/null | cut -d'=' -f2`
-		res=`date -d "${date}" +'%s'`		
+		elif [[ ${params[1]} == 'before' ]]; then
+		    date=`echo "${cert_text}" | openssl x509 -noout -startdate 2>/dev/null | cut -d'=' -f2`
+		    res=`date -d "${date}" +'%s'`		
+		fi
 	    fi
-	elif [[ ${params[0]} == 'users' ]]; then
-	    data=`doveadm who -1 2>/dev/null`
-	    if [[ ${params[1]} == 'connected' ]]; then
-		res=`echo "${data}" | awk '{print $1}' | sort | uniq | wc -l`
-	    elif [[ ${params[1]} == 'clients' ]]; then
-		res=`echo "${data}" | awk '{print $4}' | sort | uniq | wc -l`
-	    fi
+	fi
+    elif [[ ${params[0]} == 'users' ]]; then
+	data=`doveadm who -1 2>/dev/null`
+	if [[ ${params[1]} == 'connected' ]]; then
+	    res=`echo "${data}" | awk '{print $1}' | sort | uniq | wc -l`
+	elif [[ ${params[1]} == 'clients' ]]; then
+	    res=`echo "${data}" | awk '{print $4}' | sort | uniq | wc -l`
 	fi
     fi
     echo ${res:-0}
