@@ -1,0 +1,5 @@
+CACHE_TTL="5"
+CACHE_DIR="/tmp/keepax/"
+DOVEIX_URI="imaps://localhost/"
+DOVEIX_USER="test@localhost.com"
+DOVEIX_PASS="xxxxxx"
