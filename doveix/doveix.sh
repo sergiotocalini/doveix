@@ -68,7 +68,7 @@ service() {
     pattern='^(([a-z]{3,5})://)?((([^:\/]+)(:([^@\/]*))?@)?([^:\/?]+)(:([0-9]+))?)(\/[^?]*)?(\?[^#]*)?(#.*)?$'
     [[ "${DOVEIX_URI}" =~ $pattern ]] || return 1
 
-    [[ -n ${BASH_MATCH} ]] && BASH_REMATCH=( "${.sh.match[@]}" )
+    [[ -z ${BASH_MATCH} ]] && BASH_REMATCH=( "${.sh.match[@]}" )
     
     if [[ ${params[0]} =~ (uptime|listen|cert) ]]; then
 	pid=`sudo lsof -Pi :${BASH_REMATCH[10]:-${BASH_REMATCH[2]}} -sTCP:LISTEN -t 2>/dev/null`
@@ -108,7 +108,7 @@ account() {
     operation="${1:-login}"
     params=( "${@:2}" )
     
-    [[ -n ${DOVEIX_URI} || -n ${DOVEIX_USER} || -n ${DOVEIX_PASS} ]] || return 1
+    [[ -z ${DOVEIX_URI} || -z ${DOVEIX_USER} || -z ${DOVEIX_PASS} ]] && return 1
     
     if [[ ${operation} =~ (login|LOGIN|connect|CONNECT|conn|CONN) ]]; then
 	curl -s --insecure --url "${DOVEIX_URI}" --user "${DOVEIX_USER}:${DOVEIX_PASS}" 2>/dev/null
