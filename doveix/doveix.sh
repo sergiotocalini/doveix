@@ -113,7 +113,7 @@ account() {
     if [[ ${operation} =~ (login|LOGIN|connect|CONNECT|conn|CONN) ]]; then
 	curl -s -o /dev/null --insecure --url "${DOVEIX_URI}" --user "${DOVEIX_USER}:${DOVEIX_PASS}" 2>/dev/null
 	rcode="${?}"
-	[[ ${rcode} == 0]] && rval=1
+	[[ ${rcode} == 0 ]] && rval=1
     elif [[ ${operation} =~ (examine|EXAMINE) ]]; then
 	res=`curl -s --insecure --url "${DOVEIX_URI}" --user "${DOVEIX_USER}:${DOVEIX_PASS}" --request "EXAMINE ${params[0]:-INBOX}" 2>/dev/null`
 	rcode="${?}"
