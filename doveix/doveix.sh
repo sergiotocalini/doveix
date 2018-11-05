@@ -15,6 +15,7 @@ APP_VER="1.0.0"
 APP_WEB="http://www.sergiotocalini.com.ar/"
 PID_FILE="/var/run/keepalived.pid"
 TIMESTAMP=`date '+%s'`
+DOVEIX_URI="imap://localhost/"
 CACHE_DIR=${APP_DIR}/tmp
 CACHE_TTL=10                                      # IN MINUTES
 #
