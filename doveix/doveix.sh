@@ -69,36 +69,42 @@ service() {
     pattern='^(([a-z]{3,5})://)?((([^:\/]+)(:([^@\/]*))?@)?([^:\/?]+)(:([0-9]+))?)(\/[^?]*)?(\?[^#]*)?(#.*)?$'
     [[ "${DOVEIX_URI}" =~ $pattern ]] || return 1
 
-    [[ -z ${BASH_MATCH} ]] && BASH_REMATCH=( "${.sh.match[@]}" )
+    regex_match=( "${.sh.match[@]:-${BASH_REMATCH[@]:-${match}}}" )
     
     if [[ ${params[0]} =~ (uptime|listen|cert) ]]; then
-	pid=`sudo lsof -Pi :${BASH_REMATCH[10]:-${BASH_REMATCH[2]}} -sTCP:LISTEN -t 2>/dev/null`
+	pid=`sudo lsof -Pi :${regex_match[10]:-${regex_match[2]}} -sTCP:LISTEN -t 2>/dev/null`
 	rcode="${?}"
 	if [[ -n ${pid} ]]; then
 	    if [[ ${params[0]} == 'uptime' ]]; then
-		res=`sudo ps -p ${pid} -o etimes -h`
+		res=`sudo ps -p ${pid} -o etimes -h 2>/dev/null`
 	    elif [[ ${params[0]} == 'listen' ]]; then
 		[[ ${rcode} == 0 && -n ${pid} ]] && res=1
 	    elif [[ ${params[0]} == 'cert' ]]; then
-		cert_text=`openssl s_client -connect "${BASH_REMATCH[3]}:${BASH_REMATCH[10]:-${BASH_REMATCH[2]}}" </dev/null 2>/dev/null`
+		cert_text=`openssl s_client -connect "${regex_match[3]}:${regex_match[10]:-${regex_match[2]}}" </dev/null 2>/dev/null`
 		if [[ ${params[1]} == 'expires' ]]; then
 		    date=`echo "${cert_text}" | openssl x509 -noout -enddate 2>/dev/null | cut -d'=' -f2`
 		    res=$((($(date -d "${date}" +'%s') - $(date +'%s'))/86400))
 		elif [[ ${params[1]} == 'after' ]]; then
 		    date=`echo "${cert_text}" | openssl x509 -noout -enddate 2>/dev/null | cut -d'=' -f2`
-		res=`date -d "${date}" +'%s'`
+		res=`date -d "${date}" +'%s' 2>/dev/null`
 		elif [[ ${params[1]} == 'before' ]]; then
 		    date=`echo "${cert_text}" | openssl x509 -noout -startdate 2>/dev/null | cut -d'=' -f2`
-		    res=`date -d "${date}" +'%s'`		
+		    res=`date -d "${date}" +'%s' 2>/dev/null`
 		fi
 	    fi
 	fi
+    elif [[ ${params[0]} == 'version' ]]; then
+	res=`dovecot --version 2>/dev/null`
     elif [[ ${params[0]} == 'users' ]]; then
 	data=`doveadm who -1 2>/dev/null`
 	if [[ ${params[1]} == 'connected' ]]; then
 	    res=`echo "${data}" | awk '{print $1}' | sort | uniq | wc -l`
 	elif [[ ${params[1]} == 'clients' ]]; then
 	    res=`echo "${data}" | awk '{print $4}' | sort | uniq | wc -l`
+	elif [[ ${params[1]} == 'clients' ]]; then
+	    res=`doveadm user "*" 2>/dev/null | cut -d@ -f2 | sort | uniq | wc -l`
+	else
+	    res=`doveadm user "*" 2>/dev/null | sort | uniq | wc -l`
 	fi
     fi
     echo ${res:-0}
