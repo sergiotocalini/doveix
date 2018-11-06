@@ -100,8 +100,10 @@ service() {
 	    res=`echo "${data}" | awk '{print $4}' | sort | uniq | wc -l`
 	elif [[ ${params[1]} == 'domains' ]]; then
 	    res=`doveadm user "*" 2>/dev/null | cut -d@ -f2 | sort | uniq | wc -l`
-	else
+	elif [[ ${params[1]} == 'total' ]]; then
 	    res=`doveadm user "*" 2>/dev/null | sort | uniq | wc -l`
+	else
+	    res=`doveadm user "*" 2>/dev/null | sort | uniq`
 	fi
     fi
     echo ${res:-0}
