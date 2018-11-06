@@ -60,12 +60,31 @@ zabbix_not_support() {
     exit 1
 }
 
-service() {
+users() {
     params=( ${@} )
 
+    if [[ ${params[0]} =~ (connected|clients) ]]; then
+	data=`doveadm who -1 2>/dev/null`
+	if [[ ${params[1]} == 'connected' ]]; then
+	    res=`echo "${data}" | awk '{print $1}' | sort | uniq | wc -l`
+	elif [[ ${params[1]} == 'clients' ]]; then
+	    res=`echo "${data}" | awk '{print $4}' | sort | uniq | wc -l`
+	fi	
+    elif [[ ${params[0]} == 'domains' ]]; then
+	res=`doveadm user "*" 2>/dev/null | cut -d@ -f2 | sort | uniq | wc -l`
+    elif [[ ${params[0]} == 'total' ]]; then
+	res=`doveadm user "*" 2>/dev/null | sort | uniq | wc -l`
+    else
+	res=`doveadm user "*" 2>/dev/null | sort | uniq`
+    fi
+    echo ${res:-0}
+    return 0    
+}
+
+service() {
+    params=( ${@} )
     pattern='^(([a-z]{3,5})://)?((([^:\/]+)(:([^@\/]*))?@)?([^:\/?]+)(:([0-9]+))?)(\/[^?]*)?(\?[^#]*)?(#.*)?$'
     [[ "${DOVEIX_URI}" =~ $pattern ]] || return 1
-
     regex_match=( "${.sh.match[@]:-${BASH_REMATCH[@]:-${match[@]}}}" )
     
     if [[ ${params[0]} =~ (uptime|listen|cert) ]]; then
@@ -92,19 +111,6 @@ service() {
 	fi
     elif [[ ${params[0]} == 'version' ]]; then
 	res=`dovecot --version 2>/dev/null`
-    elif [[ ${params[0]} == 'users' ]]; then
-	data=`doveadm who -1 2>/dev/null`
-	if [[ ${params[1]} == 'connected' ]]; then
-	    res=`echo "${data}" | awk '{print $1}' | sort | uniq | wc -l`
-	elif [[ ${params[1]} == 'clients' ]]; then
-	    res=`echo "${data}" | awk '{print $4}' | sort | uniq | wc -l`
-	elif [[ ${params[1]} == 'domains' ]]; then
-	    res=`doveadm user "*" 2>/dev/null | cut -d@ -f2 | sort | uniq | wc -l`
-	elif [[ ${params[1]} == 'total' ]]; then
-	    res=`doveadm user "*" 2>/dev/null | sort | uniq | wc -l`
-	else
-	    res=`doveadm user "*" 2>/dev/null | sort | uniq`
-	fi
     fi
     echo ${res:-0}
     return 0
@@ -161,6 +167,8 @@ done
 
 if [[ "${SECTION}" == "service" ]]; then
     rval=$( service "${ARGS[@]}" )  
+elif [[ "${SECTION}" == "users" ]]; then
+    rval=$( users "${ARGS[@]}" )
 elif [[ "${SECTION}" == "account" ]]; then
     rval=$( account "${ARGS[@]}" )
 else
