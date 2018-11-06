@@ -40,14 +40,11 @@ usage() {
     echo "Usage: ${APP_NAME%.*} [Options]"
     echo ""
     echo "Options:"
-    echo "  -a            Query arguments."
+    echo "  -a            Arguments to the section."
     echo "  -h            Displays this help message."
     echo "  -j            Jsonify output."
-    echo "  -p            Specify the auth_pass to connect to the databases."
-    echo "  -s ARG(str)   Query to PostgreSQL."
-    echo "  -u            Specify the auth_user to connect to the databases (default=postgres)."
+    echo "  -s            Select the section (service, account, etc. )."
     echo "  -v            Show the script version."
-    echo "  -U            Specify a unix user to execute the sentences (default=postgres)."
     echo ""
     echo "Please send any bug reports to sergiotocalini@gmail.com"
     exit 1
@@ -101,7 +98,7 @@ service() {
 	    res=`echo "${data}" | awk '{print $1}' | sort | uniq | wc -l`
 	elif [[ ${params[1]} == 'clients' ]]; then
 	    res=`echo "${data}" | awk '{print $4}' | sort | uniq | wc -l`
-	elif [[ ${params[1]} == 'clients' ]]; then
+	elif [[ ${params[1]} == 'domains' ]]; then
 	    res=`doveadm user "*" 2>/dev/null | cut -d@ -f2 | sort | uniq | wc -l`
 	else
 	    res=`doveadm user "*" 2>/dev/null | sort | uniq | wc -l`
