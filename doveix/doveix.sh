@@ -66,7 +66,7 @@ service() {
     pattern='^(([a-z]{3,5})://)?((([^:\/]+)(:([^@\/]*))?@)?([^:\/?]+)(:([0-9]+))?)(\/[^?]*)?(\?[^#]*)?(#.*)?$'
     [[ "${DOVEIX_URI}" =~ $pattern ]] || return 1
 
-    regex_match=( "${.sh.match[@]:-${BASH_REMATCH[@]:-${match}}}" )
+    regex_match=( "${.sh.match[@]:-${BASH_REMATCH[@]:-${match[@]}}}" )
     
     if [[ ${params[0]} =~ (uptime|listen|cert) ]]; then
 	pid=`sudo lsof -Pi :${regex_match[10]:-${regex_match[2]}} -sTCP:LISTEN -t 2>/dev/null`
