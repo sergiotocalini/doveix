@@ -77,7 +77,7 @@ users() {
     else
 	res=`doveadm user "*" 2>/dev/null | sort | uniq`
     fi
-    echo ${res:-0}
+    echo "${res:-0}"
     return 0    
 }
 
@@ -112,7 +112,7 @@ service() {
     elif [[ ${params[0]} == 'version' ]]; then
 	res=`dovecot --version 2>/dev/null`
     fi
-    echo ${res:-0}
+    echo "${res:-0}"
     return 0
 }
 
