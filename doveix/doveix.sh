@@ -65,9 +65,9 @@ users() {
 
     if [[ ${params[0]} =~ (connected|clients) ]]; then
 	data=`doveadm who -1 2>/dev/null`
-	if [[ ${params[1]} == 'connected' ]]; then
+	if [[ ${params[0]} == 'connected' ]]; then
 	    res=`echo "${data}" | awk '{print $1}' | sort | uniq | wc -l`
-	elif [[ ${params[1]} == 'clients' ]]; then
+	elif [[ ${params[0]} == 'clients' ]]; then
 	    res=`echo "${data}" | awk '{print $4}' | sort | uniq | wc -l`
 	fi	
     elif [[ ${params[0]} == 'domains' ]]; then
