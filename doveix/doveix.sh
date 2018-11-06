@@ -64,18 +64,18 @@ users() {
     params=( ${@} )
 
     if [[ ${params[0]} =~ (connected|clients) ]]; then
-	data=`doveadm who -1 2>/dev/null`
+	data=`sudo doveadm who -1 2>/dev/null`
 	if [[ ${params[0]} == 'connected' ]]; then
 	    res=`echo "${data}" | awk '{print $1}' | sort | egrep -v "^$" | uniq | wc -l`
 	elif [[ ${params[0]} == 'clients' ]]; then
 	    res=`echo "${data}" | awk '{print $4}' | sort | egrep -v "^$" | uniq | wc -l`
 	fi	
     elif [[ ${params[0]} == 'domains' ]]; then
-	res=`doveadm user "*" 2>/dev/null | cut -d@ -f2 | sort | uniq | wc -l`
+	res=`sudo doveadm user "*" 2>/dev/null | cut -d@ -f2 | sort | uniq | wc -l`
     elif [[ ${params[0]} == 'total' ]]; then
-	res=`doveadm user "*" 2>/dev/null | sort | uniq | wc -l`
+	res=`sudo doveadm user "*" 2>/dev/null | sort | uniq | wc -l`
     else
-	res=`doveadm user "*" 2>/dev/null | sort | uniq`
+	res=`sudo doveadm user "*" 2>/dev/null | sort | uniq`
     fi
     echo "${res:-0}"
     return 0    
