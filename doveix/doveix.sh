@@ -1,4 +1,4 @@
-#!/usr/bin/env ksh
+#!/usr/bin/env bash
 PATH=/usr/local/bin:${PATH}
 IFS_DEFAULT="${IFS}"
 
@@ -64,18 +64,18 @@ users() {
     params=( ${@} )
 
     if [[ ${params[0]} =~ (connected|clients) ]]; then
-	data=`sudo doveadm who -1 2>/dev/null`
+	data=`sudo ${DOVEADM_BIN} who -1 2>/dev/null`
 	if [[ ${params[0]} == 'connected' ]]; then
 	    res=`echo "${data}" | awk '{print $1}' | sort | egrep -v "^$" | uniq | wc -l`
 	elif [[ ${params[0]} == 'clients' ]]; then
 	    res=`echo "${data}" | awk '{print $4}' | sort | egrep -v "^$" | uniq | wc -l`
 	fi	
     elif [[ ${params[0]} == 'domains' ]]; then
-	res=`sudo doveadm user "*" 2>/dev/null | cut -d@ -f2 | sort | uniq | wc -l`
+	res=`sudo ${DOVEADM_BIN} user "*" 2>/dev/null | cut -d@ -f2 | sort | uniq | wc -l`
     elif [[ ${params[0]} == 'total' ]]; then
-	res=`sudo doveadm user "*" 2>/dev/null | sort | uniq | wc -l`
+	res=`sudo ${DOVEADM_BIN} user "*" 2>/dev/null | sort | uniq | wc -l`
     else
-	res=`sudo doveadm user "*" 2>/dev/null | sort | uniq`
+	res=`sudo ${DOVEADM_BIN} user "*" 2>/dev/null | sort | uniq`
     fi
     echo "${res:-0}"
     return 0    
@@ -85,14 +85,14 @@ service() {
     params=( ${@} )
     pattern='^(([a-z]{3,5})://)?((([^:\/]+)(:([^@\/]*))?@)?([^:\/?]+)(:([0-9]+))?)(\/[^?]*)?(\?[^#]*)?(#.*)?$'
     [[ "${DOVEIX_URI}" =~ $pattern ]] || return 1
-    regex_match=( "${.sh.match[@]:-${BASH_REMATCH[@]:-${match[@]}}}" )
+    regex_match=( "${BASH_REMATCH[@]:-${match[@]}}" )
     
     if [[ ${params[0]} =~ (uptime|listen|cert) ]]; then
-	pid=`sudo lsof -Pi :${regex_match[10]:-${regex_match[2]}} -sTCP:LISTEN -t 2>/dev/null`
+	pid=`sudo ${LSOF_BIN} -Pi :${regex_match[10]:-${regex_match[2]}} -sTCP:LISTEN -t 2>/dev/null`
 	rcode="${?}"
 	if [[ -n ${pid} ]]; then
 	    if [[ ${params[0]} == 'uptime' ]]; then
-		res=`sudo ps -p ${pid} -o etimes -h 2>/dev/null`
+		res=`sudo ${PS_BIN} -p ${pid} -o etimes -h 2>/dev/null`
 	    elif [[ ${params[0]} == 'listen' ]]; then
 		[[ ${rcode} == 0 && -n ${pid} ]] && res=1
 	    elif [[ ${params[0]} == 'cert' ]]; then
@@ -110,7 +110,7 @@ service() {
 	    fi
 	fi
     elif [[ ${params[0]} == 'version' ]]; then
-	res=`dovecot --version 2>/dev/null`
+	res=`sudo ${DOVECOT_BIN} --version 2>/dev/null`
     fi
     echo "${res:-0}"
     return 0
@@ -132,6 +132,16 @@ account() {
 	rval=`echo "${res}" | grep -E "^*.*EXISTS" | grep -oE '[0-9]+'`
     fi
     echo "${rval:-0}"
+    return "${rcode:-0}"
+}
+
+replication() {
+    params=( ${@} )
+
+    if [[ ${params[0]} == 'failed' ]]; then
+        sudo ${DOVEADM_BIN} replicator status | awk 'BEGIN{failed = 0} $0 ~ /failed/ {failed = failed+$NF} END{print failed}'
+	rcode="${?}"
+    fi
     return "${rcode:-0}"
 }
 
@@ -171,6 +181,8 @@ elif [[ "${SECTION}" == "users" ]]; then
     rval=$( users "${ARGS[@]}" )
 elif [[ "${SECTION}" == "account" ]]; then
     rval=$( account "${ARGS[@]}" )
+elif [[ "${SECTION}" == "replication" ]]; then
+    rval=$( replication "${ARGS[@]}" )
 else
     zabbix_not_support
 fi

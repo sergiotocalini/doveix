@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2021-01-08T13:28:39Z</date>
+    <groups>
+        <group>
+            <name>Templates/Applications</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template App Dovecot</template>
+            <name>Template App Dovecot</name>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Dovecot</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>[Doveix] Account: Mailbox</name>
+                    <key>doveix[account, examine, INBOX]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>90d</trends>
+                    <applications>
+                        <application>
+                            <name>Dovecot</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>[Doveix] Account: Login</name>
+                    <key>doveix[account, login]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <trends>90d</trends>
+                    <applications>
+                        <application>
+                            <name>Dovecot</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last(#3)}&lt;&gt;1</expression>
+                            <name>Doveix: Account can not be accessed</name>
+                            <priority>AVERAGE</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Doveix] Replication: Failed</name>
+                    <key>doveix[replication, failed]</key>
+                    <history>1w</history>
+                    <trends>90d</trends>
+                    <applications>
+                        <application>
+                            <name>Dovecot</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last(#3)}&gt;0</expression>
+                            <name>Doveix: Replication failed for some mailboxes</name>
+                            <priority>AVERAGE</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Doveix] Service: TLS Certificate - Expires</name>
+                    <key>doveix[service, cert, expires]</key>
+                    <delay>1d</delay>
+                    <history>1w</history>
+                    <trends>90d</trends>
+                    <applications>
+                        <application>
+                            <name>Dovecot</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last(#2)}&lt;{$DOVECOT_CERT_EXPIRES}</expression>
+                            <name>Doveix: Service certificate will expire in {ITEM.LASTVALUE} days</name>
+                            <priority>INFO</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Doveix] Service: Listen</name>
+                    <key>doveix[service, listen]</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <trends>90d</trends>
+                    <applications>
+                        <application>
+                            <name>Dovecot</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>Service state</name>
+                    </valuemap>
+                    <triggers>
+                        <trigger>
+                            <expression>{last(#3)}&lt;&gt;1</expression>
+                            <name>Doveix: Service is not listening</name>
+                            <priority>WARNING</priority>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Doveix: Account can not be accessed</name>
+                                    <expression>{Template App Dovecot:doveix[account, login].last(#3)}&lt;&gt;1</expression>
+                                </dependency>
+                            </dependencies>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Doveix] Service: Uptime</name>
+                    <key>doveix[service, uptime]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <trends>90d</trends>
+                    <units>uptime</units>
+                    <applications>
+                        <application>
+                            <name>Dovecot</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{change(0)}&lt;0</expression>
+                            <name>Doveix: Service has just been restarted</name>
+                            <priority>INFO</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Doveix] Service: Version</name>
+                    <key>doveix[service, version]</key>
+                    <delay>1d</delay>
+                    <history>1w</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <applications>
+                        <application>
+                            <name>Dovecot</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[Doveix] Users: Clients</name>
+                    <key>doveix[users, clients]</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <trends>90d</trends>
+                    <applications>
+                        <application>
+                            <name>Dovecot</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[Doveix] Users: Connected</name>
+                    <key>doveix[users, connected]</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <trends>90d</trends>
+                    <applications>
+                        <application>
+                            <name>Dovecot</name>
+                        </application>
+                    </applications>
+                </item>
+            </items>
+            <macros>
+                <macro>
+                    <macro>{$DOVECOT_CERT_EXPIRES}</macro>
+                    <value>30</value>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+    <value_maps>
+        <value_map>
+            <name>Service state</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>Down</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Up</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+    </value_maps>
+</zabbix_export>
